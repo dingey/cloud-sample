@@ -1,0 +1,66 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: order-service
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: CONFIG
+      label: master
+      name:
+  profiles:
+    active: dev
+    include: datasource,common,kafka,redis
+  security:
+    user:
+      name: admin
+      password: admin
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /actuator/health
+    metadata-map:
+      user.name: ${spring.security.user.name}
+      user.password: ${spring.security.user.password}
+  client:
+    serviceUrl:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@${eureka.host:localhost}:8761/eureka/
+feign:
+  hystrix:
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+  health:
+    elasticsearch:
+      enabled: false         
+#logback
+logging:
+  path: /logs/cloud-sample/${spring.application.name}_${server.port}
+  config: classpath:logback-spring.xml
+  level:
+    com:
+      d: DEBUG
+#mybatis整合
+mybatis:
+  mapper-locations: classpath:com.d.mapper/*.xml
+  type-aliases-package: com.d.order.model
+  configuration:
+    map-underscore-to-camel-case: true
+---
+spring.profiles: dev
+spring.profiles.include: 
+#eureka.client.serviceUrl.defaultZone: http://admin:admin@localhost:8761/eureka/
+---
+spring.profiles: test
+spring.profiles.include: 
+---
+spring.profiles: pro
+spring.profiles.include: 

@@ -1,0 +1,56 @@
+server:
+  port: 8762
+spring:
+  application:
+    name: config
+  security:
+    user:
+      name: admin
+      password: admin
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/dingey/cloud-sample-config.git
+          username:
+          password:
+    bus:
+      enabled: true
+      refresh:
+        enabled: true
+  profiles:
+    active: dev
+#logback
+logging:
+  path: /logs/cloud-sample/${spring.application.name}_${server.port}
+  config: classpath:logback-spring.xml
+  level:
+    com:
+      d: DEBUG
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /actuator/health
+    metadata-map:
+      user.name: ${spring.security.user.name}
+      user.password: ${spring.security.user.password}
+  client:
+    serviceUrl:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@${eureka.host:localhost}:8761/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+---
+spring.profiles: dev
+host: localhost
+spring.cloud.config.server.git.search-paths: dev
+---
+spring.profiles: test
+host: test.d.com
+spring.cloud.config.server.git.search-paths: test
+---
+spring.profiles: pro
+host: www.d.com
+spring.cloud.config.server.git.search-paths: pro

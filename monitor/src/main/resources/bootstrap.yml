@@ -1,0 +1,46 @@
+server:
+  port: 8763
+spring:
+  application:
+    name: monitor
+  profiles:
+    active: dev
+  security:
+    user:
+      name: admin
+      password: admin
+eureka:
+  instance:
+    leaseRenewalIntervalInSeconds: 10
+    health-check-url-path: /actuator/health
+    prefer-ip-address: true
+    metadata-map:
+      user.name: ${spring.security.user.name}
+      user.password: ${spring.security.user.password}
+  client:
+    registryFetchIntervalSeconds: 5
+    serviceUrl:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@${eureka.host:localhost}:8761/eureka/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+logging:
+  path: /logs/cloud-sample/${spring.application.name}_${server.port}
+  config: classpath:logback-spring.xml
+  level:
+    com:
+      d: DEBUG
+---
+spring.profiles: dev
+spring.profiles.include:
+---
+spring.profiles: test
+spring.profiles.include:
+---
+spring.profiles: pro
+spring.profiles.include:
