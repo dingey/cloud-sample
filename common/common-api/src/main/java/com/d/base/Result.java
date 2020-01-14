@@ -4,8 +4,10 @@ import com.d.exception.CheckedException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors(chain = true)
 @SuppressWarnings({"unchecked", "unused"})
 public class Result<T> {
     @ApiModelProperty("错误代码：0成功；其他失败")
@@ -58,5 +60,9 @@ public class Result<T> {
 
     public static <T> Result fail(CheckedException e) {
         return new Result(e.getCode(), e.getMessage(), null);
+    }
+
+    public static <T> Result fallback(T t) {
+        return new Result(ResultCode.SERVER_FALLBACK.getCode(), "服务熔断", t);
     }
 }

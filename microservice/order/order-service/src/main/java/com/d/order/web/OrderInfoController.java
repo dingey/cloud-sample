@@ -6,6 +6,7 @@ import com.d.order.mapper.OrderInfoMapper;
 import com.d.order.model.OrderInfo;
 import com.d.order.vo.OrderVO;
 import com.d.user.feign.UserClient;
+import com.d.user.feign.UserClientFactory;
 import com.d.user.model.User;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +24,8 @@ public class OrderInfoController {
     private OrderInfoMapper orderInfoMapper;
     @Resource
     private UserClient userClient;
+    @Resource
+    private UserClientFactory userClientFactory;
 
     @ApiOperation("获取订单信息")
     @GetMapping(path = "/orderInfo/{id}")
@@ -32,6 +35,23 @@ public class OrderInfoController {
             OrderVO orderVO = new OrderVO();
             orderVO.setId(id);
             User user = userClient.get(orderInfo.getUserId()).getData();
+            if (user != null) {
+                orderVO.setName(user.getName());
+            }
+            return Result.success(orderVO);
+        } else {
+            throw new CheckedException("订单不存在" + id);
+        }
+    }
+
+    @ApiOperation("获取订单信息")
+    @GetMapping(path = "/orderInfo2/{id}")
+    public Result<OrderVO> get2(@PathVariable("id") Long id) {
+        OrderInfo orderInfo = orderInfoMapper.get(id);
+        if (orderInfo != null) {
+            OrderVO orderVO = new OrderVO();
+            orderVO.setId(id);
+            User user = userClientFactory.get(orderInfo.getUserId()).getData();
             if (user != null) {
                 orderVO.setName(user.getName());
             }
