@@ -32,12 +32,15 @@ public class LogAspect {
             "&& @target(org.springframework.web.bind.annotation.RestController)")
     public Object around(ProceedingJoinPoint point) throws Throwable {
         HttpServletRequest request = getHttpServletRequest();
+        long start = System.currentTimeMillis();
         try {
             Object proceed = point.proceed();
-            log.info("请求路径：{} 参数：{} 响应：{}", request.getRequestURI(), getParam(point), toJson(proceed));
+            long end = System.currentTimeMillis();
+            log.info("请求路径：{} 耗时：{}ms 参数：{} 响应：{}", end - start, request.getRequestURI(), getParam(point), toJson(proceed));
             return proceed;
         } catch (Throwable throwable) {
-            log.error("请求路径：{} 参数：{} 异常信息：{}", request.getRequestURI(), getParam(point), throwable.getMessage());
+            long end = System.currentTimeMillis();
+            log.error("请求路径：{} 耗时：{}ms 参数：{} 异常信息：{}", end - start, request.getRequestURI(), getParam(point), throwable.getMessage());
             throw throwable;
         }
     }
@@ -66,11 +69,6 @@ public class LogAspect {
             }
         }
         return args;
-//        if (getHttpServletRequest().getContentType() != null && getHttpServletRequest().getContentType().contains("json")) {
-//            return toJson(pjp.getArgs());
-//        } else {
-//            return pjp.getArgs();
-//        }
     }
 
     private String toJson(Object o) {
