@@ -19,11 +19,16 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RedisLock {
+public @interface RedisLockPut {
     /**
      * 超时(毫秒)，等待多久
      */
     long timeout() default 0L;
+
+    /**
+     * 锁住时长(毫秒)默认0,即方法执行完成即解锁，大于0则不解锁
+     */
+    long timelock() default 0L;
 
     /**
      * 锁的value值，支持spel表达式
@@ -44,7 +49,17 @@ public @interface RedisLock {
     String message() default "";
 
     /**
+     * 是否自旋锁: true下在超时时间内会循环获取锁
+     */
+    boolean spinLock() default false;
+
+    /**
      * 是否以异常的形式抛出
      */
     boolean throwable() default true;
+
+    /**
+     * 是否可重入
+     */
+    boolean reentrant() default false;
 }
