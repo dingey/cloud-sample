@@ -33,9 +33,11 @@ public class Result<T> {
     public T getData() {
         if (ResultCode.throwable(code)) {
             throw new CheckedException(code, message);
-        } else {
-            return data;
+        } else if (ResultCode.SERVER_FALLBACK.getCode() == code) {
+            RequestContext.setFallback();
         }
+        return data;
+
     }
 
     public static <T> Result success(T t) {

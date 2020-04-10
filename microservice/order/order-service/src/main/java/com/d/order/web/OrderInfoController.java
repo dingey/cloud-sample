@@ -1,5 +1,6 @@
 package com.d.order.web;
 
+import com.d.annotation.RedisCache;
 import com.d.base.Result;
 import com.d.exception.CheckedException;
 import com.d.order.mapper.OrderInfoMapper;
@@ -27,6 +28,7 @@ public class OrderInfoController {
     @Resource
     private UserClientFactory userClientFactory;
 
+    @RedisCache(cacheName = "order:get", key = "#id")
     @ApiOperation("获取订单信息")
     @GetMapping(path = "/orderInfo/{id}")
     public Result<OrderVO> get(@PathVariable("id") Long id) {

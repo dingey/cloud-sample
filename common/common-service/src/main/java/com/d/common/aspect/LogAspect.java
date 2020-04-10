@@ -1,5 +1,7 @@
 package com.d.common.aspect;
 
+import com.d.base.RequestContext;
+import com.d.base.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class LogAspect {
             Object proceed = point.proceed();
             long end = System.currentTimeMillis();
             log.info("请求路径：{} 耗时：{}ms 参数：{} 响应：{}", end - start, request.getRequestURI(), getParam(point), toJson(proceed));
+            RequestContext.removeFallback();
             return proceed;
         } catch (Throwable throwable) {
             long end = System.currentTimeMillis();

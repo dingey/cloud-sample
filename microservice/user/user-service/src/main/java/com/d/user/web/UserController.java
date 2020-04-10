@@ -1,5 +1,6 @@
 package com.d.user.web;
 
+import com.d.annotation.RedisCache;
 import com.d.base.Result;
 import com.d.exception.CheckedException;
 import com.d.user.mapper.UserMapper;
@@ -27,6 +28,7 @@ public class UserController {
         return Result.success(host);
     }
 
+    @RedisCache(cacheName = "user:get", key = "#id",sync = true)
     @ApiOperation("获取用户信息")
     @PostMapping(path = "/user/{id}")
     public Result<User> get(@PathVariable("id") Long id) {

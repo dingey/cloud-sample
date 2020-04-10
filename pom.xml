@@ -24,6 +24,7 @@
     <properties>
         <alipay.version>3.4.49.ALL</alipay.version>
         <druid.version>1.0.20</druid.version>
+        <fastjson.version>1.2.68</fastjson.version>
         <httpclient.version>4.5.5</httpclient.version>
         <java.version>1.8</java.version>
         <junit.version>4.12</junit.version>
@@ -45,6 +46,12 @@
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
