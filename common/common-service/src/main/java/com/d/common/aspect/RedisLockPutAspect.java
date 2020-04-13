@@ -18,8 +18,8 @@ import org.springframework.util.StringUtils;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,8 +34,8 @@ public class RedisLockPutAspect {
      * 释放锁lua脚本
      */
     private static final String RELEASE_LOCK_LUA_SCRIPT = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+
     private ThreadLocal<String> lockValue = new ThreadLocal<>();
-    private ConcurrentHashMap<String, Integer> lockCount = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
@@ -57,12 +57,12 @@ public class RedisLockPutAspect {
         if (redisLock.condition().isEmpty() || AspectUtil.spel(pjp, redisLock.condition(), boolean.class)) {
             String key = redisLock.value().isEmpty() ? (method.getDeclaringClass().getName() + "." + method.getName()) : AspectUtil.spel(pjp, redisLock.value(), String.class);
             log.debug("lock method is ( {}.{} ) key is {}.", method.getDeclaringClass().getName(), method.getName(), key);
-            if (tryLock(key, redisLock.timelock(), redisLock.reentrant())) {
+            if (tryLock(key, redisLock.timelock())) {
                 try {
                     return pjp.proceed();
                 } finally {
                     if (redisLock.timelock() == 0L) {
-                        unLock(key, redisLock.reentrant());
+                        unLock(key);
                     }
                 }
             } else if (redisLock.timeout() > 0) {
@@ -71,7 +71,7 @@ public class RedisLockPutAspect {
                         return pjp.proceed();
                     } finally {
                         if (redisLock.timelock() == 0L) {
-                            unLock(key, redisLock.reentrant());
+                            unLock(key);
                         }
                     }
                 } else if (!redisLock.spinLock() && trySleepRetryLock(key, redisLock.timelock(), redisLock.timeout())) {
@@ -79,7 +79,7 @@ public class RedisLockPutAspect {
                         return pjp.proceed();
                     } finally {
                         if (redisLock.timelock() == 0L) {
-                            unLock(key, redisLock.reentrant());
+                            unLock(key);
                         }
                     }
                 }
@@ -99,36 +99,26 @@ public class RedisLockPutAspect {
     }
 
     /**
-     * 尝试获取锁,不可重入
+     * 尝试获取锁,可重入
      *
      * @param key             锁的key
      * @param lockMillisecond 锁的有效期：毫秒
      * @return 是否获取锁
      */
-    private boolean tryLock(String key, long lockMillisecond, boolean reentrant) {
+    private boolean tryLock(String key, long lockMillisecond) {
         String value = lockValue.get();
         if (StringUtils.isEmpty(lockValue)) {
             value = UUID.randomUUID().toString().replaceAll("-", "");
             lockValue.set(value);
         }
-        Boolean setIfAbsent = srt.opsForValue().setIfAbsent(key, value, lockMillisecond, TimeUnit.MILLISECONDS);
-        if (setIfAbsent == null) {
-            return false;
-        } else if (setIfAbsent) {
-            return true;
-        } else if (!reentrant) {
-            return false;
+        boolean setIfAbsent = Objects.equals(srt.opsForValue().setIfAbsent(key, value, lockMillisecond, TimeUnit.MILLISECONDS), true);
+        if (!setIfAbsent) {
+            if (value.equals(srt.opsForValue().get(key))) {
+                srt.expire(key, lockMillisecond, TimeUnit.MILLISECONDS);
+                return true;
+            }
         }
-
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
-        Long result = srt.execute(redisScript, Collections.singletonList(key), lockValue);
-        if (result == null) {
-            return false;
-        } else if (result > 0L) {
-            Integer integer = lockCount.computeIfAbsent(key, k -> 0);
-            lockCount.put(key, integer);
-        }
-        return result > 0L;
+        return setIfAbsent;
     }
 
     /**
@@ -136,19 +126,12 @@ public class RedisLockPutAspect {
      *
      * @param key 锁的key
      */
-    private void unLock(String key, boolean reentrant) {
-        if (reentrant) {
-            Integer integer = lockCount.get(key);
-            if (integer != null) {
-                if (integer < 2) {
-                    lockCount.remove(key);
-                } else {
-                    integer--;
-                    lockCount.put(key, integer);
-                }
-            }
+    private void unLock(String key) {
+        if (StringUtils.isEmpty(lockValue.get())) {
+            return;
         }
-        srt.delete(key);
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
+        srt.execute(redisScript, Collections.singletonList(key), lockValue.get());
     }
 
     /**
@@ -161,7 +144,7 @@ public class RedisLockPutAspect {
      */
     private boolean trySpinLock(String key, long lockMillisecond, long timeout) {
         long start = System.currentTimeMillis();
-        while (!tryLock(key, lockMillisecond, false)) {
+        while (!tryLock(key, lockMillisecond)) {
             if ((System.currentTimeMillis() - start) > timeout) {
                 return false;
             }
@@ -182,16 +165,16 @@ public class RedisLockPutAspect {
      * @return 是否获取锁
      */
     private boolean trySleepRetryLock(String key, long lockMillisecond, long timeout) {
-        boolean tryLock = tryLock(key, lockMillisecond, false);
+        boolean tryLock = tryLock(key, lockMillisecond);
         if (!tryLock) {
             //剩余生存时间
             Long ttl = srt.getExpire(key);
             if (ttl == null || ttl <= 0L) {
-                tryLock = tryLock(key, lockMillisecond, false);
+                tryLock = tryLock(key, lockMillisecond);
             } else if (ttl <= timeout) {
                 try {
                     Thread.sleep(ttl);
-                    tryLock = tryLock(key, lockMillisecond, false);
+                    tryLock = tryLock(key, lockMillisecond);
                 } catch (InterruptedException e) {
                     return false;
                 }

@@ -57,9 +57,4 @@ public @interface RedisLockPut {
      * 是否以异常的形式抛出
      */
     boolean throwable() default true;
-
-    /**
-     * 是否可重入
-     */
-    boolean reentrant() default false;
 }
