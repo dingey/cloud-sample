@@ -1,7 +1,6 @@
 package com.d.common.aspect;
 
 import com.d.base.RequestContext;
-import com.d.base.Result;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
