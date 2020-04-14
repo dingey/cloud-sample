@@ -33,11 +33,9 @@ public class Result<T> {
     public T getData() {
         if (ResultCode.throwable(code)) {
             throw new CheckedException(code, message);
-        } else if (ResultCode.SERVER_FALLBACK.getCode() == code) {
-            RequestContext.setFallback();
+        } else {
+            return data;
         }
-        return data;
-
     }
 
     public static <T> Result success(T t) {
@@ -65,6 +63,7 @@ public class Result<T> {
     }
 
     public static <T> Result fallback(T t) {
+        RequestContext.setFallback();
         return new Result(ResultCode.SERVER_FALLBACK.getCode(), "服务熔断", t);
     }
 }
