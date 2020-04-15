@@ -18,7 +18,7 @@ public class AspectUtil {
         Object[] args = pjp.getArgs();
         ExpressionParser parser = new SpelExpressionParser();
         StandardEvaluationContext context = new StandardEvaluationContext();
-        if (args.length > 0) {
+        if (args.length > 0 && parameterNames != null) {
             for (int i = 0; i < args.length; i++) {
                 context.setVariable(parameterNames[i], args[i]);
             }
