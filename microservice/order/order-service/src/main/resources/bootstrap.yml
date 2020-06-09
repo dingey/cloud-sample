@@ -24,14 +24,16 @@ spring:
       password: admin
 eureka:
   instance:
-    leaseRenewalIntervalInSeconds: 10
     health-check-url-path: /actuator/health
     metadata-map:
       user.name: ${spring.security.user.name}
       user.password: ${spring.security.user.password}
+    lease-expiration-duration-in-seconds: 10
+    lease-renewal-interval-in-seconds: 5
   client:
     serviceUrl:
       defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@${eureka.host:localhost}:8761/eureka/
+    registry-fetch-interval-seconds: 5
 feign:
   hystrix:
     enabled: true

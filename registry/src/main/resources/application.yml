@@ -15,6 +15,12 @@ eureka:
     metadata-map:
       user.name: ${spring.security.user.name}
       user.password: ${spring.security.user.password}
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+  server:
+    enable-self-preservation: false
+    eviction-interval-timer-in-ms: 5000
+    use-read-only-response-cache: false
   client:
     registerWithEureka: false
     fetchRegistry: false
