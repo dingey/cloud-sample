@@ -16,3 +16,8 @@ docker run -d -e JAVA_OPTS="-Dspring.profiles.active=prod" -p 8080:8080 --net=ho
 ```
 java -jar -Xms512m -Xmx512m -Dspring.profiles.active=prod -Dserver.port=8080 -Dlogging.path=logs/app app.jar &
 ```
+
+### 配置刷新
+```
+curl http://localhost:8762/actuator/refresh
+```
