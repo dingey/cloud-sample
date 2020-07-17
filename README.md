@@ -25,3 +25,4 @@ curl http://localhost:8762/actuator/refresh
 批量刷新
 curl -X POST http://localhost:8762/actuator/refresh
 ```
+配置了变量的bean里需要@RefreshScope注解
