@@ -19,5 +19,9 @@ java -jar -Xms512m -Xmx512m -Dspring.profiles.active=prod -Dserver.port=8080 -Dl
 
 ### 配置刷新
 ```
+单个刷新
 curl http://localhost:8762/actuator/refresh
+
+批量刷新
+curl -X POST http://localhost:8762/actuator/refresh
 ```
