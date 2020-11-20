@@ -34,6 +34,11 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.marcosbarbero.cloud</groupId>
+			<artifactId>spring-cloud-zuul-ratelimit</artifactId>
+			<version>2.2.5.RELEASE</version>
+		</dependency>
+		<dependency>
 			<groupId>com.d</groupId>
 			<artifactId>common-api</artifactId>
 		</dependency>
@@ -49,12 +54,8 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
+			<groupId>com.github.dingey</groupId>
+			<artifactId>swagger-spring-boot-starter</artifactId>
 		</dependency>
 	</dependencies>
 

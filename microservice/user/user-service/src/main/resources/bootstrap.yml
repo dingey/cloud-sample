@@ -10,6 +10,11 @@ spring:
         service-id: config
       label: master
       name:
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_empty
+  main:
+    allow-bean-definition-overriding: true
   profiles:
     active: dev
     include: datasource,common,kafka,redis
@@ -17,9 +22,6 @@ spring:
     user:
       name: admin
       password: admin
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    default-property-inclusion: non_empty
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 10

@@ -2,6 +2,7 @@ package com.d.base;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.objenesis.instantiator.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -17,19 +18,39 @@ public abstract class BaseFallback {
         return new Result(ResultCode.SERVER_FALLBACK.getCode(), "服务熔断", empty());
     }
 
-    private StackTraceElement getTrace() {
-        StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-        return traces[4];
+    public StackTraceElement getTrace() {
+        return getTrace(5);
     }
 
-    private void error(Object... args) {
-        StackTraceElement trace = getTrace();
+    public StackTraceElement getErrorTrace() {
+        return getTrace(6);
+    }
+
+    public StackTraceElement getTrace(int index) {
+        StackTraceElement[] traces = Thread.currentThread().getStackTrace();
+        return traces[index];
+    }
+
+    public void error(Object... args) {
+        error( null, args);
+    }
+
+    public void error(Throwable cause, Object... args) {
+        StackTraceElement trace = getErrorTrace();
         String methodName = trace.getMethodName();
         Class<Object> existingClass = ClassUtils.getExistingClass(this.getClass().getClassLoader(), trace.getClassName());
-        log.error("服务被熔断，类名：{} 方法：{} 参数：{}", existingClass.getSimpleName(), methodName, args);
+        log.error("服务被熔断，类名：{} 方法：{} 参数：{} 原因：{}", getName(existingClass), methodName, args, cause == null ? "" : cause.getMessage());
     }
 
-    private Object empty() {
+    private String getName(Class<?> clazz) {
+        if (StringUtils.isEmpty(clazz.getSimpleName())) {
+            return clazz.getName();
+        } else {
+            return clazz.getSimpleName();
+        }
+    }
+
+    public Object empty() {
         StackTraceElement trace = getTrace();
         String methodName = trace.getMethodName();
         Class<Object> existingClass = ClassUtils.getExistingClass(this.getClass().getClassLoader(), trace.getClassName());

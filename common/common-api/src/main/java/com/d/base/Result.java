@@ -4,8 +4,10 @@ import com.d.exception.CheckedException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 @Data
+@Accessors(chain = true)
 @SuppressWarnings({"unchecked", "unused"})
 public class Result<T> {
     @ApiModelProperty("错误代码：0成功；其他失败")
@@ -36,27 +38,32 @@ public class Result<T> {
         }
     }
 
-    public static <T> Result success(T t) {
+    public static <T> Result<T> success(T t) {
         return new Result(0, null, t);
     }
 
-    public static <T> Result fail(String message) {
+    public static <T> Result<T> fail(String message) {
         return new Result(1, message, null);
     }
 
-    public static <T> Result error(String message) {
+    public static <T> Result<T> error(String message) {
         return new Result(1, message, null);
     }
 
-    public static <T> Result code(ResultCode code) {
+    public static <T> Result<T> code(ResultCode code) {
         return new Result(code.getCode(), code.getMessage(), null);
     }
 
-    public static <T> Result fail(int code, String message) {
+    public static <T> Result<T> fail(int code, String message) {
         return new Result(code, message, null);
     }
 
-    public static <T> Result fail(CheckedException e) {
+    public static <T> Result<T> fail(CheckedException e) {
         return new Result(e.getCode(), e.getMessage(), null);
+    }
+
+    public static <T> Result<T> fallback(T t) {
+        RequestContext.setFallback();
+        return new Result(ResultCode.SERVER_FALLBACK.getCode(), "服务熔断", t);
     }
 }

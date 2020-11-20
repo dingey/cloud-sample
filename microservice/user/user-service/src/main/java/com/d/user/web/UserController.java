@@ -10,7 +10,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 import java.util.Map;
 
 @RefreshScope
@@ -47,6 +46,12 @@ public class UserController {
     @ApiOperation("新增用户信息")
     @PostMapping(path = "/user/save")
     public Result<Integer> save(@RequestBody User user) {
-        return Result.success(1);
+        int result;
+        if (user.getId() != null && user.getId() > 0L) {
+            result = userMapper.updateSelective(user);
+        } else {
+            result = userMapper.insertSelective(user);
+        }
+        return Result.success(result);
     }
 }
